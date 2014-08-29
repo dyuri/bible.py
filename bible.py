@@ -1,6 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # vim: fileencoding=utf8
-# 
+#
 ###
 # (c) RePa
 # igen, ez nem egy szepen kidolgozott valami, hanem egy randa hack, ha nem tetszik ne hasznald
@@ -189,7 +189,7 @@ books = {
 def get_random_quote(lang='hu'):
     ids = session.query(BibleLine.id).filter(BibleLine.language == lang)
     count = ids.count()
-    
+
     import random
     id = random.randint(0, count-1)
 
