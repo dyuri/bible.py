@@ -3,13 +3,12 @@
 #
 ###
 # (c) RePa
-# igen, ez nem egy szepen kidolgozott valami, hanem egy randa hack, ha nem tetszik ne hasznald
 # public domain, csinalsz vele amit akarsz
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import and_
 from sqlalchemy import create_engine
-from sqlalchemy import Table, Column, Integer, String, Text, MetaData, ForeignKey
+from sqlalchemy import Table, Column, Integer, String, Text, MetaData
 from sqlalchemy.orm import mapper
 import sys
 
@@ -17,15 +16,16 @@ engine = create_engine('sqlite:///bible.sqlite')
 
 metadata = MetaData()
 bible_table = Table('bible_lines', metadata,
-        Column('id', Integer, primary_key=True),
-        Column('book', Integer),
-        Column('chapter', Integer),
-        Column('line', Integer),
-        Column('language', String(4)),
-        Column('text', Text)
-        )
+                    Column('id', Integer, primary_key=True),
+                    Column('book', Integer),
+                    Column('chapter', Integer),
+                    Column('line', Integer),
+                    Column('language', String(4)),
+                    Column('text', Text)
+                    )
 
 metadata.create_all(engine)
+
 
 class BibleLine(object):
     def __init__(self, book, chapter, line, language, text):
@@ -34,10 +34,18 @@ class BibleLine(object):
         self.line = line
         self.language = language
         self.text = text
+
     def __repr__(self):
-        return "<BibleLine Book %s %s:%s [%s]>" % (self.book, self.chapter, self.line, self.language)
+        return "<BibleLine Book %s %s:%s [%s]>" % (
+            self.book,
+            self.chapter,
+            self.line,
+            self.language
+        )
+
     def __unicode__(self):
         return self.text
+
     def __str__(self):
         return u"%s" % self.text
 
@@ -59,10 +67,14 @@ books = {
         8: [u"Ruth könyve", "ruth", ],
         9: [u"Sámuel I. könyve", "samuel i", "samuel 1", "sami", "sam1", ],
         10: [u"Sámuel II. könyve", "samuel ii", "samuel 2", "samii", "sam2", ],
-        11: [u"Királyok I. könyve", "kiralyok 1", "kiralyok i", "kiri", "kir1", ],
-        12: [u"Királyok II. könyve", "kiralyok 2", "kiralyok ii", "kirii", "kir2", ],
-        13: [u"Krónika I. könyve", "kronika 1", "kronika i", "kroni", "kron1", ],
-        14: [u"Krónika II. könyve", "kronika 2", "kronika ii", "kronii", "kron2", ],
+        11: [u"Királyok I. könyve", "kiralyok 1", "kiralyok i", "kiri",
+             "kir1", ],
+        12: [u"Királyok II. könyve", "kiralyok 2", "kiralyok ii", "kirii",
+             "kir2", ],
+        13: [u"Krónika I. könyve", "kronika 1", "kronika i", "kroni",
+             "kron1", ],
+        14: [u"Krónika II. könyve", "kronika 2", "kronika ii", "kronii",
+             "kron2", ],
         15: [u"Ezsdrás könyve", "ezsdras", "ezsd", ],
         16: [u"Nehémiás könyve", "nehemias", "nehe", ],
         17: [u"Eszter könyve", "eszter", "eszt", ],
@@ -100,8 +112,10 @@ books = {
         49: [u"Efézusbeliekhez írt levél", "euf", ],
         50: [u"Filippibeliekhez írt levél", "fili", "fil", ],
         51: [u"Kolossébeliekhez írt levél", "kol", ],
-        52: [u"Thessalonikabeliekhez írt I. levél", "thes1", "thesi", "th1", "thi", ],
-        53: [u"Thessalonikabeliekhez írt II. levél", "thes2", "thesii", "th2", "thii", ],
+        52: [u"Thessalonikabeliekhez írt I. levél", "thes1", "thesi", "th1",
+             "thi", ],
+        53: [u"Thessalonikabeliekhez írt II. levél", "thes2", "thesii", "th2",
+             "thii", ],
         54: [u"Timótheushoz írt I. levél", "tim1", "timi", ],
         55: [u"Timótheushoz írt II. levél", "tim2", "timii", ],
         56: [u"Titushoz írt levél", "titus", "tit", ],
@@ -109,10 +123,13 @@ books = {
         58: [u"Zsidókhoz írt levél", "zsidokhoz", "zsid", ],
         59: [u"Jakab Apostol levele", "jakab", "jak", ],
         60: [u"Péter Apostol I. levele", "peter1", "peteri", "pet1", "peti", ],
-        61: [u"Péter Apostol II. levele", "peter2", "peterii", "pet2", "petii", ],
+        61: [u"Péter Apostol II. levele", "peter2", "peterii", "pet2",
+             "petii", ],
         62: [u"János Apostol I. levele", "jan1", "jani", "janos1", "janosi", ],
-        63: [u"János Apostol II. levele", "jan2", "janii", "janos2", "janosii", ],
-        64: [u"János Apostol III. levele", "jan3", "janiii", "janos3", "janosiii", ],
+        63: [u"János Apostol II. levele", "jan2", "janii", "janos2",
+             "janosii", ],
+        64: [u"János Apostol III. levele", "jan3", "janiii", "janos3",
+             "janosiii", ],
         65: [u"Júdás Apostol levele", "judas", "jud", ],
         66: [u"Jelenések könyve", "jelenesek", "jelen", "jel", ],
     },
@@ -186,24 +203,37 @@ books = {
     }
 }
 
+
 def get_random_quote(lang='hu'):
     ids = session.query(BibleLine.id).filter(BibleLine.language == lang)
     count = ids.count()
 
     import random
-    id = random.randint(0, count-1)
+    id = ids[random.randint(0, count-1)][0]
 
     line = session.query(BibleLine).filter(BibleLine.id == id).one()
     bookname = get_book_name(line.book, lang)
-    quotestr = u"%s (%s %s:%s)" % (line.text.strip(), bookname, line.chapter, line.line)
+    quotestr = u"%s (%s %s:%s)" % (
+        line.text.strip(),
+        bookname,
+        line.chapter,
+        line.line
+    )
 
     return quotestr
 
+
 def get_bible_line(book, chapter, line, lang='hu'):
-    return session.query(BibleLine).filter(and_(BibleLine.book == book, BibleLine.chapter == chapter, BibleLine.line == line, BibleLine.language == lang)).first()
+    return session.query(BibleLine).filter(and_(BibleLine.book == book,
+                                                BibleLine.chapter == chapter,
+                                                BibleLine.line == line,
+                                                BibleLine.language == lang)
+                                           ).first()
+
 
 def get_book_name(booknr, lang='hu'):
     return books[lang][booknr][0]
+
 
 def get_book_number(book):
     if book.isdigit():
@@ -214,6 +244,7 @@ def get_book_number(book):
             return nr
 
     return 0
+
 
 def bible_quote(book, chapter, lines, lang='hu', info=True):
     booknr = get_book_number(book)
@@ -235,11 +266,13 @@ def bible_quote(book, chapter, lines, lang='hu', info=True):
 
     return quotestr
 
+
 def help():
     print "Usage: %s <book> <chapter>:<line>[-line_to] [language]" % sys.argv[0]
     sys.exit(1)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     if len(sys.argv) < 3:
         help()
 
@@ -266,4 +299,3 @@ if __name__=="__main__":
         help()
 
     print quote,
-
