@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{line.bookname}} {{line.chapter}}:{{line.line}}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+  <div class="bible">
+    <div class="text">{{line.text}}</div>
+    <div class="lineinfo">
+      <span class="book">{{line.bookname}}</span>
+      <span class="chapter">{{line.chapter}}</span>:<span class="line">{{line.line}}</span>
+    </div>
+  </div>
+</body>
+</html>
