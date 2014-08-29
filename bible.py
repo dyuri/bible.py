@@ -35,6 +35,10 @@ class BibleLine(object):
         self.language = language
         self.text = text
 
+    @property
+    def bookname(self):
+        return get_book_name(self.book, self.language)
+
     def __repr__(self):
         return "<BibleLine Book %s %s:%s [%s]>" % (
             self.book,
@@ -42,6 +46,16 @@ class BibleLine(object):
             self.line,
             self.language
         )
+
+    def as_dict(self):
+        return {
+            "book": self.book,
+            "bookname": self.bookname,
+            "chapter": self.chapter,
+            "line": self.line,
+            "language": self.language,
+            "text": self.text
+        }
 
     def __unicode__(self):
         return self.text
@@ -204,7 +218,7 @@ books = {
 }
 
 
-def get_random_quote(lang='hu'):
+def get_random_line(lang='hu'):
     ids = session.query(BibleLine.id).filter(BibleLine.language == lang)
     count = ids.count()
 
@@ -212,6 +226,12 @@ def get_random_quote(lang='hu'):
     id = ids[random.randint(0, count-1)][0]
 
     line = session.query(BibleLine).filter(BibleLine.id == id).one()
+
+    return line
+
+
+def get_random_quote(lang='hu'):
+    line = get_random_line(lang)
     bookname = get_book_name(line.book, lang)
     quotestr = u"%s (%s %s:%s)" % (
         line.text.strip(),
