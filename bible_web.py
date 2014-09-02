@@ -17,13 +17,23 @@ def getlang(lang):
     return lang if lang in LANGS else DEFAULT_LANG
 
 
-def show_line(line):
+def show_line(line, template_name='bibleline.html'):
     if (request.headers['Content-Type'] == 'application/json'
             or request.args.get('json', False) is not False):
         return jsonify(line.as_dict())
     else:
-        return render_template('bibleline.html', line=line)
+        return render_template(template_name, line=line)
 
+@app.route("/prlx")
+@app.route("/prlx/<lang>/")
+def parallax_random_quote(lang=DEFAULT_LANG):
+    """
+    Display random bible quote
+    """
+    lang = getlang(lang)
+
+    line = get_random_line(lang)
+    return show_line(line, 'bibleline_parallax.html')
 
 @app.route("/")
 @app.route("/random/")

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{line.bookname}} {{line.chapter}}:{{line.line}}</title>
+  <!-- link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/ -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/parallax.css') }}"/>
+  <script src="{{ url_for('static', filename='vendor/jquery-1.11.1.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='javascript/main.js') }}" /></script>
+</head>
+<body>
+  <div class="parallax" data-component="bible">
+    <div id="group1" class="parallax__group">
+      <div class="parallax__layer parallax__layer--base">
+        <div class="title">The Holy Bible</div>
+      </div>
+    </div>
+    <div data-template="true">
+      <div id="group2" class="parallax__group">
+       <div class="parallax__layer parallax__layer--fore">
+         <div class="title text">Foreground Layer</div>
+       </div>
+       <div class="parallax__layer parallax__layer--base">
+        <div class="title title__grey">
+            <span class="bookname"></span>
+            <span class="chapter"></span>:<span class="line"></span>
+        </div>      
+       </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
