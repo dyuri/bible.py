@@ -28,22 +28,28 @@ metadata.create_all(engine)
 
 
 class BibleLine(object):
-    def __init__(self, book, chapter, line, language, text):
+    def __init__(self, book, chapter, line, language, text, lineTo=None):
         self.book = book
         self.chapter = chapter
         self.line = line
         self.language = language
         self.text = text
+        self._lineTo = lineTo
 
     @property
     def bookname(self):
         return get_book_name(self.book, self.language)
 
+    @property
+    def lineTo(self):
+        return getattr(self, '_lineTo', self.line)
+
     def __repr__(self):
-        return "<BibleLine Book %s %s:%s [%s]>" % (
+        return "<BibleLine Book %s %s:%s-%s [%s]>" % (
             self.book,
             self.chapter,
             self.line,
+            self.lineTo,
             self.language
         )
 
@@ -53,6 +59,7 @@ class BibleLine(object):
             "bookname": self.bookname,
             "chapter": self.chapter,
             "line": self.line,
+            "lineTo": self.lineTo,
             "language": self.language,
             "text": self.text
         }
@@ -249,6 +256,33 @@ def get_bible_line(book, chapter, line, lang='hu'):
                                                 BibleLine.line == line,
                                                 BibleLine.language == lang)
                                            ).first()
+
+
+def get_bible_lines(book, chapter, line, lineTo=None, lang='hu', wrapper="%s"):
+    if lineTo is None:
+        lineTo = line
+
+    lines = []
+    quote = None
+    for i in range(line, lineTo+1):
+        bline = get_bible_line(book, chapter, i, lang)
+        if bline is None:
+            break
+        lines.append(bline)
+
+    if len(lines):
+        firstline = lines[0]
+        lastline = lines[-1]
+        quote = BibleLine(
+            firstline.book,
+            firstline.chapter,
+            firstline.line,
+            firstline.language,
+            "\n".join([wrapper % ln.text for ln in lines]),
+            lastline.line
+        )
+
+    return quote
 
 
 def get_book_name(booknr, lang='hu'):

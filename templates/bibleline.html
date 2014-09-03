@@ -7,7 +7,7 @@
 </head>
 <body>
   <div class="bible">
-    <div class="text">{{line.text}}</div>
+    <div class="text">{{line.text|safe}}</div>
     <div class="lineinfo">
       <span class="book">{{line.bookname}}</span>
       <span class="chapter">{{line.chapter}}</span>:<span class="line">{{line.line}}</span>
