@@ -365,6 +365,21 @@ def get_bible_line(book, chapter, line, lang='hu'):
     return bibleDao.get_line(book, chapter, line, lang)
 
 
+def get_next_line(book, chapter, line, lang='hu'):
+    line = bibleDao.get_line(book, chapter, line+1, lang)
+
+    if not line:
+        line = bibleDao.get_line(book, chapter+1, 1, lang)
+
+    if not line:
+        line = bibleDao.get_line(book+1, 1, 1, lang)
+
+    if not line:
+        line = bibleDao.get_line(1, 1, 1, lang)
+
+    return line
+
+
 def get_random_line(lang='hu'):
 
     if bibleCache.filled:
@@ -401,7 +416,7 @@ def get_bible_lines(book, chapter, line, lineTo=None, lang='hu', wrapper="%s"):
     quote = None
     for i in range(line, lineTo+1):
         bline = get_bible_line(book, chapter, i, lang)
-        if bline is None:
+        if not bline:
             break
         lines.append(bline)
 
