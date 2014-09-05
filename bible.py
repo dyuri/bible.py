@@ -11,6 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, Integer, String, Text, MetaData
 from sqlalchemy.orm import mapper
 import sys
+import random
 
 engine = create_engine('sqlite:///bible.sqlite')
 
@@ -29,6 +30,7 @@ metadata.create_all(engine)
 
 class BibleLine(object):
     def __init__(self, book, chapter, line, language, text, lineTo=None):
+        self.id = None
         self.book = book
         self.chapter = chapter
         self.line = line
@@ -225,14 +227,155 @@ books = {
 }
 
 
+class BibleCache(object):
+
+    def __init__(self):
+        self.__cache = {
+            "byid": {},
+            "byline": {},
+        }
+        self.__filled = False
+
+    @property
+    def filled(self):
+        return self.__filled
+
+    def get_line_by_id(self, id):
+        """
+        Returns line by id
+        - [line] if cached an exists
+        - None not cached
+        - False does not exist
+        """
+
+        return self.__cache["byid"].get(id, False if self.filled else None)
+
+    def get_line(self, book, chapter, line, lang):
+        """
+        Returns line
+        - [line] if cached an exists
+        - None not cached
+        - False does not exist
+        """
+
+        book = self.__cache["byline"].get(book, False if self.filled else None)
+
+        if not book:
+            return book
+
+        chapter = book.get(chapter, False if self.filled else None)
+
+        if not chapter:
+            return chapter
+
+        line = chapter.get(line, False if self.filled else None)
+
+        if not line:
+            return line
+
+        langLine = line.get(lang, False if self.filled else None)
+
+        return langLine
+
+    def insert(self, line):
+
+        if not line.id:
+            return
+
+        line.cached = True
+
+        # add by id
+        self.__cache["byid"][line.id] = line
+
+        # add by line
+        book = self.__cache["byline"].get(line.book)
+        if not book:
+            book = {}
+            self.__cache["byline"][line.book] = book
+
+        chapter = book.get(line.chapter)
+        if not chapter:
+            chapter = {}
+            book[line.chapter] = chapter
+
+        bline = chapter.get(line.line)
+        if not bline:
+            bline = {}
+            chapter[line.line] = bline
+
+        bline[line.language] = line
+
+    def fill(self, session):
+        lines = session.query(BibleLine).all()
+        for line in lines:
+            self.insert(line)
+
+        self.__filled = True
+
+    def get_random_line(self, lang):
+        book = self.__cache["byline"].get(
+            random.choice(self.__cache["byline"].keys()))
+        chapter = book.get(random.choice(book.keys()))
+        line = chapter.get(random.choice(chapter.keys()))
+
+        return line.get(lang)
+
+
+class BibleDAO(object):
+
+    def __init__(self, session, cache):
+        self.session = session
+        self.cache = cache
+
+    def get_line(self, book, chapter, line, lang):
+        cline = self.cache.get_line(book, chapter, line, lang)
+        if cline is not None:
+            return cline
+
+        line = session.query(BibleLine).filter(
+            and_(BibleLine.book == book,
+                 BibleLine.chapter == chapter,
+                 BibleLine.line == line,
+                 BibleLine.language == lang)
+        ).first()
+
+        self.cache.insert(line)
+        return line
+
+    def get_line_by_id(self, id):
+        cline = self.cache.get_line_by_id(id)
+        if cline is not None:
+            return cline
+
+        line = session.query(BibleLine).filter(BibleLine.id == id).one()
+
+        self.cache.insert(line)
+        return line
+
+
+bibleCache = BibleCache()
+bibleDao = BibleDAO(session, bibleCache)
+
+
+def get_bible_line_by_id(id):
+    return bibleDao.get_line_by_id(id)
+
+
+def get_bible_line(book, chapter, line, lang='hu'):
+    return bibleDao.get_line(book, chapter, line, lang)
+
+
 def get_random_line(lang='hu'):
-    ids = session.query(BibleLine.id).filter(BibleLine.language == lang)
-    count = ids.count()
 
-    import random
-    id = ids[random.randint(0, count-1)][0]
+    if bibleCache.filled:
+        line = bibleCache.get_random_line(lang)
+    else:
+        ids = session.query(BibleLine.id).filter(BibleLine.language == lang)
+        count = ids.count()
 
-    line = session.query(BibleLine).filter(BibleLine.id == id).one()
+        id = ids[random.randint(0, count-1)][0]
+
+        line = get_bible_line_by_id(id)
 
     return line
 
@@ -248,14 +391,6 @@ def get_random_quote(lang='hu'):
     )
 
     return quotestr
-
-
-def get_bible_line(book, chapter, line, lang='hu'):
-    return session.query(BibleLine).filter(and_(BibleLine.book == book,
-                                                BibleLine.chapter == chapter,
-                                                BibleLine.line == line,
-                                                BibleLine.language == lang)
-                                           ).first()
 
 
 def get_bible_lines(book, chapter, line, lineTo=None, lang='hu', wrapper="%s"):

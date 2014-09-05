@@ -7,6 +7,7 @@
 
 from flask import Flask, jsonify, request, render_template
 from bible import get_random_line, get_bible_lines, get_book_number
+from bible import bibleCache, session
 
 app = Flask(__name__)
 DEFAULT_LANG = 'hu'
@@ -66,4 +67,5 @@ def quote(book, chapter, line, lineTo=None, lang=DEFAULT_LANG):
 
 
 if __name__ == "__main__":
+    bibleCache.fill(session)
     app.run('0.0.0.0', 7777)
